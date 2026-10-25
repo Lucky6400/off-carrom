@@ -36,6 +36,7 @@ export function clearTextCache() { cache.clear(); }
 export function text(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, o: TextOpts & { align?: 'l' | 'c' | 'r' } = {}) {
   if (!s) return; const cv = textCanvas(s, o), pad = (cv as any).__pad as number, w = textWidth(s, o);
   const ox = o.align === 'c' ? -w / 2 : o.align === 'r' ? -w : 0;
+  const ovl = (window as any).__ovl as any[] | undefined; if (ovl && (o.alpha ?? 1) > 0.3) { const m = ctx.getTransform(), k = view.rs; ovl.push({ s, x0: (m.a * (x + ox) + m.e) / k, y0: (m.d * y + m.f) / k, x1: (m.a * (x + ox + w) + m.e) / k, y1: (m.d * (y + cap(o)) + m.f) / k }); }
   if (o.alpha !== undefined) ctx.globalAlpha = o.alpha;
   ctx.drawImage(cv, x + ox - pad, y - pad); if (o.alpha !== undefined) ctx.globalAlpha = 1;
 }

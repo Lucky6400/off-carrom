@@ -137,11 +137,11 @@ export function makeHall(): Scene {
       const px = lx + lw + 14, pw = X1() - 8 - px, py = 56, ph = CB() - 56, mode = modeById(GAME_NAMES(loc, sel));
       const br = (x: number, y: number, dx: number, dy: number) => { ctx.strokeStyle = '#c7893b'; ctx.lineWidth = 2; ctx.shadowColor = '#c7893b'; ctx.shadowBlur = 6; ctx.beginPath(); ctx.moveTo(x + dx * 8, y); ctx.lineTo(x, y); ctx.lineTo(x, y + dy * 8); ctx.stroke(); ctx.shadowBlur = 0; };
       ctx.fillStyle = 'rgba(22,13,4,0.72)'; ctx.fillRect(px, py, pw, ph); br(px, py, 1, 1); br(px + pw, py, -1, 1); br(px, py + ph, 1, -1); br(px + pw, py + ph, -1, -1);
-      const mid = px + pw / 2; text(ctx, mode.name, mid, py + 6, { align: 'c', scale: 1.1, bold: true, color: '#ffe27a', outline: '#3a2000' }); text(ctx, mode.tag, mid, py + 20, { align: 'c', color: '#f2dac3', outline: '#2c1a08' });
-      miniRack(ctx, mode.id, px + 54, py + 66, 80, L.board.frame, L.board.surface);
-      const rx0 = px + 104, rw0 = px + pw - 8 - rx0, boss = charById(L.boss);
-      ctx.drawImage(avatar(L.boss, 30, 'normal', L.accent), Math.round(rx0 + rw0 / 2 - 15), py + 34); text(ctx, 'VS', rx0 + rw0 / 2, py + 66, { align: 'c', color: '#c0af9e', outline: null }); text(ctx, boss.name, rx0 + rw0 / 2, py + 76, { align: 'c', color: '#ffffff', outline: '#2c1a08', scale: textWidth(boss.name) > rw0 ? Math.max(0.7, rw0 / textWidth(boss.name)) : 1 });
-      wrap(mode.desc, pw - 16).slice(0, 4).forEach((ln, i) => text(ctx, ln, px + 8, py + 98 + i * 10, { color: '#ffffff', outline: '#2c1a08' }));
+      const mid = px + pw / 2; text(ctx, mode.name, mid, py + 6, { align: 'c', scale: fit(mode.name, pw - 16, { bold: true }, 1.1), bold: true, color: '#ffe27a', outline: '#3a2000' }); text(ctx, mode.tag, mid, py + 19, { align: 'c', scale: fit(mode.tag, pw - 16), color: '#f2dac3', outline: '#2c1a08' });
+      const rowY = py + 33, bsz = 46; miniRack(ctx, mode.id, px + 10 + bsz / 2 + 4, rowY + bsz / 2 + 4, bsz, L.board.frame, L.board.surface);
+      const rx0 = px + 22 + bsz + 6, rw0 = px + pw - 8 - rx0, boss = charById(L.boss);
+      ctx.drawImage(avatar(L.boss, 26, 'normal', L.accent), Math.round(rx0 + rw0 / 2 - 13), rowY); text(ctx, 'VS', rx0 + rw0 / 2, rowY + 29, { align: 'c', color: '#c0af9e', outline: null }); text(ctx, boss.name, rx0 + rw0 / 2, rowY + 39, { align: 'c', color: '#ffffff', outline: '#2c1a08', scale: fit(boss.name, rw0) });
+      const dy0 = rowY + bsz + 12; wrap(mode.short, pw - 16).slice(0, Math.max(1, Math.floor((py + ph - 4 - dy0) / 9.5))).forEach((ln, i) => text(ctx, ln, px + 8, dy0 + i * 9.5, { color: '#ffffff', outline: '#2c1a08' }));
       if (msg) text(ctx, msg, mid, py + ph - 36, { align: 'c', color: '#ff9aa8', outline: '#2c1a08' });
       if (backBtn(ctx)) go('map', { loc }); const ok = canPlay(sel); if (okBtn(ctx, ok ? 'PLAY' : 'LOCKED', { disabled: !ok, icon: 'play' })) play();
       if (!ok) { msg = 'BEAT THE GAME BEFORE FIRST'; }

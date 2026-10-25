@@ -65,7 +65,9 @@ export function start(canvas: HTMLCanvasElement, wrap: HTMLElement) {
 
   function render() {
     ctx.setTransform(view.rs, 0, 0, view.rs, 0, 0); ctx.imageSmoothingEnabled = true; ctx.fillStyle = '#120c06'; ctx.fillRect(0, 0, view.w, H);
+    if ((window as any).__ovlOn) (window as any).__ovl = [];
     draw(ctx);
+    const L = (window as any).__ovl as any[] | undefined; if (L) { const hits = (window as any).__ovlHits ??= new Set<string>(); for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) { const a = L[i], b = L[j]; if (a.s === b.s && Math.abs(a.x0 - b.x0) < 0.5 && Math.abs(a.y0 - b.y0) < 0.5) continue; const ox = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), oy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0); if (ox > 1 && oy > 1.2) hits.add(`${a.s} <> ${b.s}`); } for (const a of L) if (a.x0 < -1 || a.x1 > view.w + 1 || a.y1 > view.h + 1) hits.add(`OFFSCREEN ${a.s}`); (window as any).__ovl = undefined; }
   }
   let last = performance.now(), insetTick = 0, lastInsets = '';
   function frame(now: number) {

@@ -10,7 +10,7 @@ import { coinSprite, lookOf } from '../gfx/coins.js';
 import { STRIKERS } from '../data/items.js';
 import { CR, SR } from '../game/physics.js';
 import { text, textCanvas } from '../gfx/font.js';
-import { fillRR, fillRRr, panel, COL } from '../gfx/ui.js';
+import { fillRR, fillRRr, panel, COL, fit } from '../gfx/ui.js';
 import { startMusic } from '../audio.js';
 import { LOCS } from '../data/locations.js';
 import { charById } from '../data/characters.js';
@@ -55,9 +55,10 @@ export function makeLoading(): Scene {
       if (!solo) { text(ctx, op.name, rx + pw / 2, py + ph + 6, { align: 'c', bold: true, color: '#ffffff', outline: '#2c1a08' }); text(ctx, op.title, rx + pw / 2, py + ph + 18, { align: 'c', color: '#ffb0bc', outline: '#2c1a08' }); }
       // centre: VS, mode, hall
       const vs = textCanvas('VS', { scale: 3, bold: true, slant: 0.2, color: '#ffffff', color2: '#ffe27a', outline: '#5a3a00', shadow: '#000000' }); ctx.save(); ctx.globalAlpha = e; ctx.drawImage(vs, Math.round(CX() - vs.width / 2), py + 20); ctx.restore();
-      text(ctx, solo ? 'TUTORIAL' : mode.name, CX(), py + 64, { align: 'c', bold: true, color: '#ffffff', outline: '#2c1a08' });
-      text(ctx, solo ? 'COACH PEPPER' : mode.tag, CX(), py + 78, { align: 'c', color: '#f2dac3', outline: '#2c1a08' });
-      text(ctx, L.name, CX(), py + 92, { align: 'c', color: L.accent, outline: '#2c1a08' });
+      const gapW = Math.max(40, rx - (lx + pw) - 8), fs0 = (t: string, b = false) => fit(t, gapW, b ? { bold: true } : {});
+      text(ctx, solo ? 'TUTORIAL' : mode.name, CX(), py + 64, { align: 'c', bold: true, scale: fs0(solo ? 'TUTORIAL' : mode.name, true), color: '#ffffff', outline: '#2c1a08' });
+      text(ctx, solo ? 'COACH PEPPER' : mode.tag, CX(), py + 78, { align: 'c', scale: fs0(solo ? 'COACH PEPPER' : mode.tag), color: '#f2dac3', outline: '#2c1a08' });
+      text(ctx, L.name, CX(), py + 92, { align: 'c', scale: fs0(L.name), color: L.accent, outline: '#2c1a08' });
       if (cfg.bet > 0) text(ctx, `BET ${cfg.bet}`, CX(), py + 106, { align: 'c', color: '#ffd23a', outline: '#3a2000' });
       // bar and tip
       const bw = Math.min(260, view.w - 60), bx = CX() - bw / 2, by = view.h - view.sb - 40, f = done / Math.max(1, steps.length);

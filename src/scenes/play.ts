@@ -407,7 +407,7 @@ export function makePlay(): Scene {
     }
     const kx = x + w / 2, ky = y + h - 2 - L * power, kr = 6.5;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 3; const g = ctx.createRadialGradient(kx - 2, ky - 2, 1, kx, ky, kr + 1); g.addColorStop(0, '#fff8c0'); g.addColorStop(0.6, '#ffd23a'); g.addColorStop(1, '#b8780a'); ctx.beginPath(); ctx.arc(kx, ky, kr, 0, 7); ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#4a2c00'; ctx.stroke(); ctx.restore();
-    text(ctx, 'POWER', x + w / 2, y - 9, { align: 'c', color: '#ffe0a8', outline: '#2a1608' }); text(ctx, `${Math.round(power * 100)}`, x + w / 2, y + h + 3, { align: 'c', color: '#ffffff', outline: '#2a1608' });
+    text(ctx, `POWER ${Math.round(power * 100)}`, x + w / 2 + 6, y - 10, { align: 'c', color: '#ffe0a8', outline: '#2a1608' });
   }
   /* see-through arrow button: every colour carries its own alpha, so the board shows through */
   function glassBtn(ctx: CanvasRenderingContext2D, dir: -1 | 1, cx: number, cy: number, r: number, disabled: boolean) {

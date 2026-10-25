@@ -7,6 +7,7 @@ import { hi } from './hires.js';
 import { hash2, shade, mixHex } from '../util.js';
 
 type C = CanvasRenderingContext2D;
+const SIGNS = false;
 const DW = 427, DH = 240, HZ = 112; // design box and the wall / floor horizon
 const hexA = (h: string, a: number) => { if (h.startsWith('rgba')) return h; const v = parseInt(h.slice(1), 16); return `rgba(${(v >> 16) & 255},${(v >> 8) & 255},${v & 255},${a})`; };
 const lg = (c: C, x0: number, y0: number, x1: number, y1: number, st: [number, string][]) => { const g = c.createLinearGradient(x0, y0, x1, y1); st.forEach((s) => g.addColorStop(s[0], s[1])); return g; };
@@ -18,6 +19,7 @@ const poly = (c: C, pts: number[][], f: string | CanvasGradient, line?: string, 
 const glow = (c: C, x: number, y: number, r: number, col: string, a = 0.5) => circ(c, x, y, r, rg(c, x, y, 0, r, [[0, hexA(col, a)], [1, hexA(col, 0)]]));
 function neon(c: C, col: string, lw: number, path: () => void, blur = 7) { c.save(); c.lineJoin = 'round'; c.lineCap = 'round'; c.shadowColor = col; c.shadowBlur = blur * view.rs; c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); path(); c.stroke(); c.shadowBlur = 0; c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = lw * 0.35; c.beginPath(); path(); c.stroke(); c.restore(); }
 function txt(c: C, s: string, x: number, y: number, size: number, fill: string | CanvasGradient, o: { font?: string; glow?: string; align?: CanvasTextAlign; stroke?: string; rot?: number } = {}) {
+  if (!SIGNS) { void c; void s; void x; void y; void size; void fill; void o; return; } // venue signage is off: lettering in the art clashes with the UI text drawn over it
   c.save(); c.translate(x, y); if (o.rot) c.rotate(o.rot); c.font = `${size}px ${o.font ?? 'Bungee, Impact, sans-serif'}`; c.textAlign = o.align ?? 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
   if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = 8 * view.rs; c.fillStyle = o.glow; c.fillText(s, 0, 0); c.shadowBlur = 0; }
   if (o.stroke) { c.strokeStyle = o.stroke; c.lineWidth = size * 0.14; c.strokeText(s, 0, 0); }

@@ -63,7 +63,7 @@ export function makeResult(): Scene {
         text(ctx, `LEVEL ${lv}`, bx, y, { color: '#ffe27a', outline: '#3a2000', bold: true });
         fillRR(ctx, bx, y + 12, bw, 11, '#120b04', 3); fillRR(ctx, bx + 1, y + 13, Math.max(3, (bw - 2) * f), 9, '#d7914b', 2.4); fillRR(ctx, bx + 1, y + 13, Math.max(3, (bw - 2) * f), 3, 'rgba(255,255,255,0.4)', 1.2);
         const nn = lvUp && kk >= 0.5 ? s.xpNext : s.xpNextBefore; text(ctx, `${fmt(Math.round(f * nn))} / ${fmt(nn)}`, bx + bw / 2, y + 14.5, { align: 'c', color: '#ffffff', outline: '#2c1a08' });
-        if (lvUp && kk >= 0.5) { const p = 0.5 + 0.5 * Math.sin(t * 8); text(ctx, 'LEVEL UP!', x + w - 14, y, { align: 'r', bold: true, color: '#ffffff', outline: '#6f4115', alpha: 0.7 + p * 0.3 }); if (hasGear) text(ctx, `NEW GEAR: ${unlocks(s.levelAfter).join(', ')}`, CX(), y + 26, { align: 'c', color: '#edca5c', outline: '#2c1a08' }); }
+        if (lvUp && kk >= 0.5) { const p = 0.5 + 0.5 * Math.sin(t * 8); text(ctx, 'LEVEL UP!', x + w - 14, y, { align: 'r', bold: true, color: '#ffffff', outline: '#6f4115', alpha: 0.7 + p * 0.3 }); if (hasGear) text(ctx, `NEW GEAR: ${unlocks(s.levelAfter).join(', ')}`, CX(), y + 28, { align: 'c', color: '#edca5c', outline: '#2c1a08' }); }
         y += 26 + (hasGear ? 10 : 0);
       }
       if (done && extra) { const yy = py + ph - 26; fillRR(ctx, x + 10, yy, w - 20, 21, 'rgba(255,210,70,0.16)', 4); if (s.reward) { const p = powerById(s.reward.id); ctx.drawImage(powerIcon(p, 19), x + 13, yy + 1); text(ctx, `VENUE CLEARED!  +${s.reward.n} ${p.name}`, x + 37, yy + 6.5, { color: '#ffe27a', outline: '#3a2000' }); } else text(ctx, s.locClear ? 'VENUE CLEARED!' : 'STAGE CLEARED!', CX(), yy + 6.5, { align: 'c', bold: true, color: '#edca5c', outline: '#2c1a08' }); }

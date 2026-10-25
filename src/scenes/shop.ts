@@ -38,7 +38,7 @@ export function makeShop(): Scene {
   const equip = (it: Item) => { if (tab === 0) save.striker = it.id; else if (tab === 1) save.grip = it.id; else if (tab === 2) save.powder = it.id; else if (tab === 4) save.char = it.id; persist(); sfx('buy'); msg = 'EQUIPPED!'; msgT = 1.2; };
 
   function art(ctx: CanvasRenderingContext2D, it: Item, cx: number, cy: number, big: boolean) {
-    if (tab === 0) { const s = big ? 56 : 36; ctx.drawImage(strikerIcon(it as StrikerDef, s), cx - s / 2, cy - s / 2); }
+    if (tab === 0) { const s = big ? 40 : 34; ctx.drawImage(strikerIcon(it as StrikerDef, s), cx - s / 2, cy - s / 2); }
     else if (tab === 1) { const s = big ? 54 : 34; ctx.drawImage(gripIcon(it as GripDef, s), cx - s / 2, cy - s / 2); }
     else if (tab === 2) { const s = big ? 54 : 34; ctx.drawImage(powderIcon(it as PowderDef, s), cx - s / 2, cy - s / 2); }
     else if (tab === 3) { const s = big ? 38 : 26; ctx.drawImage(powerIcon(it as PowerDef, s), cx - s / 2, cy - s / 2); }
@@ -57,16 +57,16 @@ export function makeShop(): Scene {
       const lx = X0() + 6, lw = Math.min(124, view.w * 0.34), ly = 52, lh = CB() - 52; panel(ctx, lx, ly, lw, lh, { fill: '#2c1b09' });
       // preview box
       fillRRr(ctx, lx + 5, ly + 5, lw - 10, 48, '#120b04', 6.8); const pg = ctx.createLinearGradient(0, ly + 5, 0, ly + 53); pg.addColorStop(0, '#533516'); pg.addColorStop(1, '#1f1407'); fillRRr(ctx, lx + 6, ly + 6, lw - 12, 46, pg, 5.8);
-      ctx.save(); ctx.beginPath(); ctx.roundRect(lx + 6, ly + 6, lw - 12, 46, 5.8); ctx.clip(); art(ctx, it, lx + lw / 2, ly + 29, true); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.roundRect(lx + 6, ly + 6, lw - 12, 46, 5.8); ctx.clip(); art(ctx, it, lx + lw / 2 + (tab === 3 ? 18 : 0), ly + 29, true); ctx.restore();
       if (lockedByLevel) { ctx.fillStyle = 'rgba(13,8,3,0.5)'; ctx.fillRect(lx + 6, ly + 6, lw - 12, 46); icon(ctx, 'lock', lx + lw - 16, ly + 16, { center: true }); }
-      if (eq) { fillRR(ctx, lx + 10, ly + 38, 52, 11, '#d78d4b', 3); text(ctx, 'EQUIPPED', lx + 36, ly + 39.6, { align: 'c', color: '#ffffff', outline: '#442810' }); }
+      
       const nm = it.name, ns = fit(nm, lw - 10, { bold: true }, 1); text(ctx, nm, lx + lw / 2, ly + 59, { align: 'c', bold: true, scale: ns, color: '#ffffff', outline: '#2c1a08' });
       let sy = ly + 73;
       if (tab === 0) { const c = it as StrikerDef; statBar(ctx, lx + 6, sy, lw - 12, 'AIM', Math.round(c.aim / 0.65), '#f2bd87', 10, 38); statBar(ctx, lx + 6, sy + 11, lw - 12, 'POWER', Math.round((c.power - 1) / 0.025), '#ff8a3a', 10, 38); sy += 24; }
       else if (tab === 1) { statBar(ctx, lx + 6, sy, lw - 12, 'STEADY', Math.round((it as GripDef).control * 10), '#f2bd87', 10, 34); sy += 13; }
       else if (tab === 2) { statBar(ctx, lx + 6, sy, lw - 12, 'GLIDE', Math.round(((it as PowderDef).glide - 1) / 0.035), '#c060ff', 10, 30); sy += 13; }
       else if (tab === 4) { const c = it as CharDef; statBar(ctx, lx + 6, sy, lw - 12, 'POWER', c.power, '#ff8a3a', 10, 42); statBar(ctx, lx + 6, sy + 11, lw - 12, 'CONTROL', c.control, '#f2bd87', 10, 42); statBar(ctx, lx + 6, sy + 22, lw - 12, 'TOUCH', c.spin, '#c060ff', 10, 42); sy += 35; }
-      else { wrap((it as PowerDef).desc, lw - 12).slice(0, 4).forEach((ln, i) => text(ctx, ln, lx + 6, sy + i * 9.5, { color: '#fbecdc', outline: null })); sy += 38; { const on = `OWNED ${powerCount((it as PowerDef).id)}`, bw0 = textWidth(on) + 10; fillRR(ctx, lx + lw - 6 - bw0 - 2, ly + 9, bw0, 12, '#2c1a08', 3.5); text(ctx, on, lx + lw - 8 - bw0 / 2, ly + 11.8, { align: 'c', color: '#ffe27a', outline: null }); } }
+      else { wrap((it as PowerDef).desc, lw - 12).slice(0, 4).forEach((ln, i) => text(ctx, ln, lx + 6, sy + i * 9.5, { color: '#fbecdc', outline: null })); sy += 38; { const on = `OWNED ${powerCount((it as PowerDef).id)}`, bw0 = textWidth(on) + 10; fillRR(ctx, lx + 9, ly + 9, bw0, 12, '#2c1a08', 3.5); text(ctx, on, lx + 9 + bw0 / 2, ly + 11.8, { align: 'c', color: '#ffe27a', outline: null }); } }
       if (tab <= 2 && sy + 11 < ly + lh - 24) { wrap((it as StrikerDef).desc.toUpperCase(), lw - 12).slice(0, 2).forEach((ln, i) => text(ctx, ln, lx + 6, sy + 1 + i * 9.5, { color: '#f2dac3', outline: null })); sy += 19; }
       // action
       const ay = ly + lh - 24, mid = lx + lw / 2;

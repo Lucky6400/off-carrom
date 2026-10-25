@@ -21,7 +21,7 @@ export function makeSelect(): Scene {
     enter(p: SelectParams) { P = p; i = Math.max(0, p.ids.indexOf(p.start ?? p.ids[0])); pos = i; t = 0; msg = 0; startMusic('menu'); },
     update(dt) { t += dt; msg -= dt; pos += (i - pos) * Math.min(1, dt * 12); },
     draw(ctx) {
-      menuBg(ctx, 'green'); topBar(ctx, X0(), X1(), 4, { profile: false }); header(ctx, P.title, CX() - 10, 4, Math.max(130, textWidth(P.title, { bold: true }) + 44));
+      menuBg(ctx, 'green'); header(ctx, P.title, CX(), 4, Math.max(130, textWidth(P.title, { bold: true }) + 44));
       const id = P.ids[i], c = charById(id), owned = P.owned ? P.owned(id) : true, bad = P.exclude === id;
       const cw = 86, ch = 100, y0 = 40, gap = 22;
       for (let k = Math.max(0, Math.floor(pos) - 2); k <= Math.min(P.ids.length - 1, Math.ceil(pos) + 2); k++) {

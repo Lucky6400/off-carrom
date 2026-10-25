@@ -56,7 +56,7 @@ export function makeSetup(): Scene {
         modeBadge(ctx, m.id, x + 11, y + gh / 2, 6.5); text(ctx, m.name, x + 22, y + 3, { bold: true, scale: fit(m.name, gw - 26, { bold: true }, 1), color: '#ffffff', outline: '#2c1a08' }); text(ctx, m.special ? 'SPECIAL' : 'CLASSIC', x + 22, y + 12.5, { scale: 0.82, color: m.special ? '#ffe27a' : '#f2dac3', outline: null });
         if (hit(x, y, gw, gh, true).click) { S.mode = i; sfx('click'); }
       });
-      const m = MODES[S.mode], dy = gy + 5 * (gh + g) + 3; wrap(m.desc, gw * 2 + g).slice(0, 2).forEach((ln, i) => text(ctx, ln, gx, dy + i * 9.5, { color: '#fbecdc', outline: '#2c1a08', scale: 0.92 }));
+      const m = MODES[S.mode], dy = gy + 5 * (gh + g) + 3; wrap(m.short, gw * 2 + g).slice(0, 2).forEach((ln, i) => text(ctx, ln, gx, dy + i * 9.5, { color: '#fbecdc', outline: '#2c1a08', scale: 0.92 }));
       // table / hall card with arrows
       const rx = gx + gw * 2 + g + 24, rw = X1() - 10 - rx, chh = Math.min(86, Math.round(rw * 0.6)), cw = Math.round(chh / 0.6), cx = rx + Math.round((rw - cw) / 2), cy = 50, L = LOCS[S.loc], open = hallOpen(S.loc);
       ctx.save(); neonFrame(ctx, cx, cy, cw, chh, open ? L.accent : '#65523f', 6, 12); clipRR(ctx, cx, cy, cw, chh, 6); ctx.drawImage(hallArt(S.loc, cw, chh), cx, cy);

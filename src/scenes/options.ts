@@ -2,6 +2,7 @@
 import type { Scene } from './manager.js';
 import { go } from './manager.js';
 import { view, X0, X1, CX } from '../config.js';
+import { iconCanvas } from '../gfx/ui.js';
 import { ptr, keys, inRect } from '../input.js';
 import { save, persist, resetSave } from '../save.js';
 import { applyVolumes, sfx, startMusic } from '../audio.js';
@@ -70,6 +71,7 @@ export function makeProfile(): Scene {
       { const nm = (label: string, v: string, y: number) => { text(ctx, label, rx + 10, y, { color: '#c0af9e', outline: null }); text(ctx, v, rx + rw - 10, y, { align: 'r', color: '#ffffff', outline: '#2c1a08', scale: fit(v, rw - 30 - textWidth(label)) }); };
         nm('STRIKER', strikerById(save.striker).name, gy + 44); nm('GRIP', gripById(save.grip).name, gy + 55.5); nm('POWDER', powderById(save.powder).name, gy + 67); }
       ctx.restore();
+      if (maxScroll > 0 && scroll < maxScroll - 1) { const fg = ctx.createLinearGradient(0, py + ph - 16, 0, py + ph - 1); fg.addColorStop(0, 'rgba(44,27,9,0)'); fg.addColorStop(1, 'rgba(44,27,9,0.95)'); ctx.fillStyle = fg; ctx.fillRect(rx + 1, py + ph - 16, rw - 2, 15); ctx.drawImage(iconCanvas('down'), rx + rw / 2 - iconCanvas('down').width / 2, py + ph - 12); }
       if (maxScroll > 0) { const th = Math.max(14, (ph - 8) * (ph / contentH)), ty0 = py + 4 + ((ph - 8 - th) * scroll) / maxScroll; fillRR(ctx, rx + rw - 4, py + 4, 2.4, ph - 8, 'rgba(0,0,0,0.35)', 1); fillRR(ctx, rx + rw - 4, ty0, 2.4, th, '#d7914b', 1); }
       if (capsule(ctx, 'CHANGE PLAYER', X1() - 80, view.h - view.sb - 34, 130, 19, 'teal')) go('select', { title: 'SELECT PLAYER', ids: PLAYABLE.map((p) => p.id), start: save.char, owned: (id: string) => save.chars.includes(id), onPick: (id: string) => { save.char = id; persist(); go('profile'); }, onBack: () => go('profile') } as SelectParams);
       if (backBtn(ctx)) go('title');
