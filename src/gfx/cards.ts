@@ -20,8 +20,10 @@ export function cardArt(kind: CardKind, w: number, h: number): HTMLCanvasElement
   const key = `${kind}|${Math.round(w)}|${Math.round(h)}|${view.rs}`, hit = cache.get(key); if (hit) return hit;
   const { cv, ctx: c } = hi(w, h); c.save(); c.beginPath(); c.rect(0, 0, w, h); c.clip();
   if (kind === 'map') {
-    rect(c, 0, 0, w, h, lg(c, 0, 0, w, h, [[0, '#8f6335'], [1, '#442c10']]));
-    for (let i = 0; i < 14; i++) { c.fillStyle = `rgba(255,255,255,${0.03 + hash2(i, 1) * 0.05})`; c.beginPath(); c.ellipse(hash2(i, 2) * w, hash2(i, 3) * h, 18 + hash2(i, 4) * 30, 8 + hash2(i, 5) * 14, hash2(i, 6), 0, 7); c.fill(); }
+    rect(c, 0, 0, w, h, lg(c, 0, 0, 0, h, [[0, '#2a1850'], [0.45, '#c8505a'], [0.75, '#ffa24a'], [1, '#ffd88a']]));
+    circ(c, w * 0.78, h * 0.5, h * 0.2, 'rgba(255,240,190,0.9)'); circ(c, w * 0.78, h * 0.5, h * 0.34, 'rgba(255,220,150,0.25)');
+    for (let i = 0; i < 40; i++) circ(c, hash2(i, 1) * w, hash2(i, 2) * h * 0.4, 0.4 + hash2(i, 3) * 0.6, 'rgba(255,255,255,0.7)');
+    c.fillStyle = '#1c0f2a'; c.beginPath(); c.moveTo(0, h); let sx0 = 0; while (sx0 < w) { const bw = 10 + hash2(sx0, 7) * 16, bh = h * (0.3 + hash2(sx0, 8) * 0.25); c.lineTo(sx0, h - bh); if (hash2(sx0, 9) > 0.5) { c.quadraticCurveTo(sx0 + bw / 2, h - bh - bw * 0.9, sx0 + bw, h - bh); } else c.lineTo(sx0 + bw, h - bh); sx0 += bw; } c.lineTo(w, h); c.closePath(); c.fill();
     // lanes and a winding path through the ten venues
     c.strokeStyle = 'rgba(255,255,255,0.18)'; c.lineWidth = 3; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(0, h * (0.2 + i * 0.22)); c.bezierCurveTo(w * 0.3, h * (0.1 + i * 0.25), w * 0.6, h * (0.4 + i * 0.1), w, h * (0.15 + i * 0.25)); c.stroke(); }
     const pts = LOCS.map((_, i) => [w * (0.1 + 0.8 * ((i * 0.6180339) % 1)), h * (0.16 + 0.68 * (((i * 0.4142) + 0.2) % 1))]);
@@ -29,7 +31,7 @@ export function cardArt(kind: CardKind, w: number, h: number): HTMLCanvasElement
     pts.forEach((p, i) => { const col = LOCS[i].accent; c.save(); c.shadowColor = col; c.shadowBlur = 5 * view.rs; circ(c, p[0], p[1], 6.2, '#2c1b0a'); circ(c, p[0], p[1], 5, col); c.restore(); });
     c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 1; c.beginPath(); c.arc(w * 0.88, h * 0.82, h * 0.1, 0, 7); c.stroke(); c.fillStyle = '#ffd23a'; c.beginPath(); c.moveTo(w * 0.88, h * 0.82 - h * 0.12); c.lineTo(w * 0.88 + 3, h * 0.82); c.lineTo(w * 0.88, h * 0.82 + 3); c.lineTo(w * 0.88 - 3, h * 0.82); c.fill();
   } else if (kind === 'shop') {
-    rect(c, 0, 0, w, h, lg(c, 0, 0, 0, h, [[0, '#6a4020'], [1, '#2a1608']])); for (let x = 0; x < w; x += 12) rect(c, x, 0, 11.4, h, `rgba(0,0,0,${0.08 + hash2(x, 3) * 0.14})`);
+    rect(c, 0, 0, w, h, lg(c, 0, 0, 0, h, [[0, '#5a1a30'], [1, '#1c0a14']])); for (let x = 0, i = 0; x < w; x += 14, i++) { rect(c, x, 0, 14, h * 0.2, i & 1 ? '#f0e0c0' : '#c8302a'); c.fillStyle = i & 1 ? '#f0e0c0' : '#c8302a'; c.beginPath(); c.arc(x + 7, h * 0.2, 7, 0, Math.PI); c.fill(); } for (let i = 0; i < 12; i++) circ(c, hash2(i, 4) * w, h * 0.3 + hash2(i, 5) * h * 0.4, 6 + hash2(i, 6) * 10, 'rgba(255,200,120,0.06)');
     rect(c, 0, h * 0.7, w, h * 0.05, '#8a5a30'); rect(c, 0, h * 0.75, w, h * 0.25, '#3a2010');
     // a rack of striker discs on two shelves
     for (let i = 0; i < 4; i++) { c.drawImage(strikerIcon(STRIKERS[i * 2 % STRIKERS.length], 26), w * (0.1 + i * 0.1), h * 0.62 - 25); c.drawImage(strikerIcon(STRIKERS[(i * 2 + 1) % STRIKERS.length], 26), w * (0.1 + i * 0.1), h * 0.84 - 25); }
@@ -38,7 +40,7 @@ export function cardArt(kind: CardKind, w: number, h: number): HTMLCanvasElement
     rect(c, w * 0.58, h * 0.5, w * 0.36, h * 0.04, '#9a6a38'); rect(c, w * 0.58, h * 0.78, w * 0.36, h * 0.04, '#9a6a38');
     for (let i = 0; i < 4; i++) c.drawImage(powderIcon(POWDERS[i + 1], 22), w * 0.6 + i * w * 0.085, h * 0.5 - 20); for (let i = 0; i < 4; i++) c.drawImage(gripIcon(GRIPS[i + 1], 24), w * 0.6 + i * w * 0.085, h * 0.78 - 22);
   } else {
-    rect(c, 0, 0, w, h, '#4a2c14'); rect(c, w * 0.04, h * 0.06, w * 0.92, h * 0.88, lg(c, 0, 0, w, h, [[0, '#4a331a'], [1, '#2c1e0e']])); c.strokeStyle = '#8a5a30'; c.lineWidth = 4; c.strokeRect(w * 0.04, h * 0.06, w * 0.92, h * 0.88);
+    rect(c, 0, 0, w, h, '#6a4420'); rect(c, w * 0.04, h * 0.06, w * 0.92, h * 0.88, lg(c, 0, 0, w, h, [[0, '#1e3a4a'], [1, '#0e1e2c']])); for (let i = 0; i < 30; i++) circ(c, hash2(i, 1) * w, hash2(i, 2) * h, 6 + hash2(i, 3) * 14, 'rgba(255,255,255,0.025)'); c.strokeStyle = '#b8803c'; c.lineWidth = 4; c.strokeRect(w * 0.04, h * 0.06, w * 0.92, h * 0.88);
     c.strokeStyle = 'rgba(255,255,255,0.8)'; c.lineWidth = 1.3; c.lineCap = 'round'; const bs = Math.min(w * 0.5, h * 0.62), tx = (w - bs) / 2, ty = h * 0.14; c.strokeRect(tx, ty, bs, bs);
     for (const [x, y] of [[tx, ty], [tx + bs, ty], [tx, ty + bs], [tx + bs, ty + bs]]) circ(c, x, y, 3.4, 'rgba(255,255,255,0.85)');
     c.beginPath(); c.arc(tx + bs / 2, ty + bs / 2, bs * 0.1, 0, 7); c.stroke(); c.beginPath(); c.moveTo(tx + bs * 0.2, ty + bs * 0.85); c.lineTo(tx + bs * 0.8, ty + bs * 0.85); c.stroke();

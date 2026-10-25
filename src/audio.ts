@@ -1,4 +1,4 @@
-/* Synthesised audio: small WebAudio voices for UI and pool sounds (cue strike, ball clack, cushion thud, pocket drop) and a looping lounge-style backing track. */
+/* Synthesised audio: small WebAudio voices for UI and pool sounds (cue strike, ball clack, cushion thud, pocket drop) and a looping raga-style backing track. */
 import { save } from './save.js';
 
 let ac: AudioContext | null = null, master: GainNode, sfxBus: GainNode, musBus: GainNode, noiseBuf: AudioBuffer | null = null, comp: DynamicsCompressorNode;
@@ -59,29 +59,39 @@ export function sfx(name: string, v = 1) {
   }
 }
 
-/* ---- music: a soft lounge loop (minor ii-V-I style changes), electric-piano chords, bass, brushed hats ---- */
+/* ---- music: a raga-flavoured loop (Kafi scale): a tanpura drone, tabla-style rhythm and a plucked sitar-like melody ---- */
 type Mood = 'menu' | 'game' | 'result';
 let mood: Mood | null = null, timer = 0, step = 0, nextT = 0;
-const PROG: [number, number[]][] = [[50, [0, 3, 7, 10]], [43, [0, 4, 7, 10]], [48, [0, 4, 7, 11]], [45, [0, 4, 7, 10]]]; // Dm7 G7 Cmaj7 A7 (midi roots)
+const SCALE = [0, 2, 3, 5, 7, 9, 10, 12, 14, 15]; // Kafi: C D Eb F G A Bb, then up an octave
+const ROOT = 50; // D
+const PHRASES: number[][] = [
+  [4, -1, 5, 4, 3, -1, 2, -1, 3, 4, -1, 3, 2, -1, 0, -1],
+  [0, -1, 2, 3, -1, 4, -1, 5, 6, -1, 5, 4, 3, -1, 4, -1],
+  [7, -1, 6, 5, -1, 4, 3, -1, 4, 5, -1, 3, 2, 0, -1, -1],
+  [4, -1, 3, 2, 0, -1, 2, -1, 3, -1, 4, 5, 4, -1, 3, -1],
+];
 const mf = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
 export function startMusic(m: Mood) {
   if (!ac) return; if (mood === m) return; stopMusic(); mood = m; step = 0; nextT = ac.currentTime + 0.08;
   timer = window.setInterval(() => {
     if (!ac || !active || !mood) return;
-    while (nextT < ac.currentTime + 0.25) { playStep(step, nextT, mood); step++; nextT += (60 / (mood === 'game' ? 96 : 104)) / 4; }
+    while (nextT < ac.currentTime + 0.25) { playStep(step, nextT, mood); step++; nextT += (60 / (mood === 'game' ? 108 : 92)) / 4; }
   }, 60);
 }
 export function stopMusic() { if (timer) clearInterval(timer); timer = 0; mood = null; }
 function playStep(i: number, t: number, m: Mood) {
-  if (!ac) return; const bar = Math.floor(i / 16) % 4, s = i % 16, [root, chord] = PROG[bar];
-  const v = (f: number, d: number, type: OscillatorType, vol: number, att = 0.01) => { const o = ac!.createOscillator(), g = ac!.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + att); g.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(g); g.connect(musBus); o.start(t); o.stop(t + d + 0.05); };
-  if (s === 0 || s === 10) v(mf(root - 12), 0.5, 'sine', 0.5);
-  if (s === 6 && m !== 'result') v(mf(root - 12 + 7), 0.3, 'sine', 0.3);
-  if (s === 0) for (const c of chord) { v(mf(root + 12 + c), 1.5, 'triangle', 0.07, 0.03); v(mf(root + 24 + c) * 1.002, 1.2, 'sine', 0.035, 0.03); }
-  if (s === 8 && m !== 'game') for (const c of chord) v(mf(root + 12 + c), 0.6, 'triangle', 0.05, 0.02);
-  if (s % 2 === 0 && noiseBuf) { const n = ac.createBufferSource(), g = ac.createGain(), f = ac.createBiquadFilter(); n.buffer = noiseBuf; f.type = 'highpass'; f.frequency.value = 8000; g.gain.setValueAtTime(s % 4 === 0 ? 0.07 : 0.04, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); n.connect(f); f.connect(g); g.connect(musBus); n.start(t); n.stop(t + 0.07); }
-  const mel = [12, -1, 7, -1, 10, 7, -1, 3, 0, -1, 7, 10, -1, 12, 14, -1];
-  if (m === 'menu' && mel[s] >= 0 && bar % 2 === 0) v(mf(root + 24 + mel[s] + (chord[1] === 4 ? 0 : 0)), 0.32, 'sine', 0.06, 0.02);
-  if (s === 12 && noiseBuf) { const n = ac.createBufferSource(), g = ac.createGain(), f = ac.createBiquadFilter(); n.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = 1800; g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1); n.connect(f); f.connect(g); g.connect(musBus); n.start(t); n.stop(t + 0.12); }
+  if (!ac) return; const bar = Math.floor(i / 16) % 4, s = i % 16;
+  const v = (f: number, d: number, type: OscillatorType, vol: number, att = 0.01, slide = 0) => { const o = ac!.createOscillator(), g = ac!.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + att); g.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(g); g.connect(musBus); o.start(t); o.stop(t + d + 0.05); };
+  const hit = (type: BiquadFilterType, freq: number, vol: number, d: number) => { if (!noiseBuf) return; const n = ac!.createBufferSource(), g = ac!.createGain(), f = ac!.createBiquadFilter(); n.buffer = noiseBuf; f.type = type; f.frequency.value = freq; f.Q.value = 2; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d); n.connect(f); f.connect(g); g.connect(musBus); n.start(t); n.stop(t + d + 0.02); };
+  // tanpura drone: root and fifth, re-plucked every half bar
+  if (s === 0 || s === 8) { v(mf(ROOT - 12), 1.9, 'sine', 0.3, 0.05); v(mf(ROOT - 5), 1.7, 'triangle', 0.1, 0.05); v(mf(ROOT), 1.6, 'sine', 0.07, 0.05); }
+  if (s === 4 || s === 12) v(mf(ROOT - 12) * 2, 1.1, 'triangle', 0.045, 0.03);
+  // tabla: deep dha on 1 and 9, na on 5 and 13, light ticks between
+  if (s === 0 || s === 8) { v(mf(ROOT - 24) * 1.5, 0.28, 'sine', 0.55, 0.004, -26); hit('bandpass', 1400, 0.14, 0.05); }
+  if (s === 4 || s === 12) { v(mf(ROOT + 12), 0.1, 'sine', 0.2, 0.003, 60); hit('bandpass', 3200, 0.1, 0.04); }
+  if (s % 2 === 0 && s % 4 !== 0 && m !== 'result') hit('highpass', 7000, 0.05, 0.03);
+  if (s === 14) { v(mf(ROOT - 12) * 1.25, 0.12, 'sine', 0.2, 0.003, -20); }
+  // sitar-like pluck melody
+  const deg = PHRASES[bar][s]; if (deg >= 0 && (m !== 'game' || bar % 2 === 0)) { const f = mf(ROOT + 12 + SCALE[deg]); v(f * 1.012, 0.5, 'sawtooth', 0.05, 0.004, -f * 0.015); v(f, 0.7, 'triangle', 0.09, 0.004); v(f * 2, 0.25, 'sine', 0.03, 0.004); }
 }
 export function vibrate(ms: number) { if (save.opts.vibrate && (navigator as any).userActivation?.hasBeenActive !== false) try { navigator.vibrate?.(ms); } catch { /* ignore */ } }
