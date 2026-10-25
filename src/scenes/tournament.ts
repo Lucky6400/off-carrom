@@ -64,7 +64,7 @@ export function makeTournament(): Scene {
       menuBg(ctx, 'teal'); topBar(ctx, X0(), X1()); header(ctx, !T ? 'TOURNAMENT' : T.over ? (T.champion ? 'CHAMPION' : 'KNOCKED OUT') : NAMES[Math.min(3, T.r)], CX(), 24, 150);
       if (!T) {
         const w = Math.min(300, view.w - 24), x = CX() - w / 2, y = 52, h = 126; panel(ctx, x, y, w, h, { fill: '#2c1b09' });
-        ['16 PLAYERS, SINGLE KNOCKOUT', 'R16 CLASSIC   QF FREESTYLE', 'SF B&W DUEL   FINAL CLASSIC', `ENTRY FEE ${FEE} COINS`, `WIN THE TROPHY AND ${fmt(PRIZE)} COINS!`].forEach((s, i) => text(ctx, s, CX(), y + 10 + i * 13, { align: 'c', color: i === 4 ? '#ffd23a' : i === 3 ? '#ff9ae8' : '#ffffff', outline: '#2c1a08', bold: i === 0 }));
+        ['16 PLAYERS, SINGLE KNOCKOUT', 'R16 CLASSIC   QF FREESTYLE', 'SF MATCH PLAY   FINAL CLASSIC', `ENTRY FEE ${FEE} COINS`, `WIN THE TROPHY AND ${fmt(PRIZE)} COINS!`].forEach((s, i) => text(ctx, s, CX(), y + 10 + i * 13, { align: 'c', color: i === 4 ? '#ffd23a' : i === 3 ? '#ff9ae8' : '#ffffff', outline: '#2c1a08', bold: i === 0 }));
         ctx.drawImage(avatar(pick, 28, 'normal', '#f2bd87'), CX() - 14, y + h - 50); text(ctx, charById(pick).name, CX(), y + h - 19, { align: 'c', color: '#ffffff', outline: '#2c1a08' });
         const cyb = y + h + 5; if (capsule(ctx, 'CHANGE PLAYER', CX() - 66, cyb, 118, 18, 'teal')) choose();
         const can = save.coins >= FEE; if (capsule(ctx, can ? `ENTER  ${FEE}` : `NEED ${FEE} COINS`, CX() + 66, cyb, 118, 18, can ? 'gold' : 'grey', { disabled: !can })) { addCoins(-FEE); startNew(pick); sfx('buy'); }

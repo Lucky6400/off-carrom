@@ -51,7 +51,7 @@ const TUT: TutStep[] = [
   { kind: 'do', focus: 'pot', text: 'NOW POT A COIN! SLIDE, AIM, SET YOUR POWER AND TAP THE STRIKER BUTTON.' },
   { kind: 'next', text: 'CLASSIC: POT ALL NINE OF YOUR COLOUR, THEN THE QUEEN. COVER HER WITH ONE OF YOUR COINS ON THE NEXT SHOT OR SHE GOES BACK.' },
   { kind: 'next', text: 'FREESTYLE: ANY COIN SCORES. WHITE IS 20, BLACK IS 10 AND THE QUEEN IS 50. FIRST TO 100 WINS.' },
-  { kind: 'next', text: 'B&W DUEL: SEVEN COINS EACH AND NO QUEEN, WITH A 20 SECOND SHOT CLOCK. CLEAR YOURS FIRST.' },
+  { kind: 'next', text: 'MATCH PLAY: CLASSIC RULES OVER SEVERAL BOARDS. WIN A BOARD TO SCORE THE RIVAL COINS LEFT PLUS 3 FOR THE QUEEN. FIRST TO 12.' },
   { kind: 'next', text: 'FOULS: POTTING YOUR STRIKER SENDS A COIN BACK ONTO THE BOARD AND ENDS YOUR TURN.' },
   { kind: 'next', text: 'YOU ARE READY! TAKE 100 COINS FOR FINISHING SCHOOL. GOOD LUCK OUT THERE!' },
 ];
@@ -298,20 +298,23 @@ export function makePlay(): Scene {
     ctx.drawImage(avatar(id, sz, expr[p], active ? COL.gold : '#a8845a'), Math.round(cx - sz / 2), y0);
     const nm = shortName(ch); text(ctx, nm, cx, y0 + sz + 1, { align: 'c', color: active ? '#ffe27a' : '#ffffff', outline: '#2a1608', scale: Math.min(1, (w - 4) / Math.max(1, textWidth(nm))) });
     let y = y0 + sz + 11;
-    if (g.id === 'knock') { for (let i = 0; i < 3; i++) { ctx.save(); ctx.globalAlpha = i < pl.lives ? 1 : 0.25; ctx.drawImage(iconCanvas('heart'), cx - 14 + i * 10, y - 2); ctx.restore(); } y += 10; }
-    else if (!g.colored() || g.id === 'queen') { const lbl = g.id === 'sprint' ? `${pl.score}/3` : g.id === 'queen' ? '' : `${pl.score} PTS`; if (lbl) { text(ctx, lbl, cx, y, { align: 'c', color: '#ffd23a', outline: '#3a2000' }); y += 10; } }
+    if (g.id === 'knock') { text(ctx, `${pl.score} PTS`, cx, y, { align: 'c', color: '#ffd23a', outline: '#3a2000' }); y += 10; }
+    else if (!g.colored() || g.id === 'queen') { const lbl = g.id === 'sprint' ? `${pl.score}/4` : g.id === 'queen' ? '' : `${pl.score} PTS`; if (lbl) { text(ctx, lbl, cx, y, { align: 'c', color: '#ffd23a', outline: '#3a2000' }); y += 10; } }
     tallyRow(ctx, p, cx, y);
   }
   function infoBlock(ctx: CanvasRenderingContext2D, cx: number, y0: number) {
     const g = m.game, mode = modeById(cfg.mode), w = colW() - 4, lines: [string, string][] = [];
     for (const ln of wrap(mode.name, w)) lines.push([ln, '#ffe0a8']);
-    const tg = TARGETS[g.id]; if (tg) lines.push([g.id === 'sprint' ? 'FIRST TO 3' : `FIRST TO ${tg}`, '#d8b890']);
+    const tg = TARGETS[g.id]; if (tg) lines.push([`FIRST TO ${tg}`, '#d8b890']);
+    if (g.id === 'duel') { lines.push(['FIRST TO 12', '#d8b890']); lines.push([`POINTS ${g.players[0].score}-${g.players[1].score}`, '#ffd23a']); }
+    if (g.id === 'knock') { lines.push(['SHOTS LEFT', '#d8b890']); lines.push([`${g.players[0].lives}-${g.players[1].lives}`, '#ffd23a']); }
     if (g.id === 'target') { const nt = g.goals()[0]; if (nt !== undefined) lines.push([`HIT ${nt} FIRST`, '#ffd23a']); }
-    if (g.id === 'classic' || g.id === 'queen') { const q = g.pendingCover >= 0 ? 'COVER THE QUEEN!' : g.queenBy >= 0 ? 'QUEEN COVERED' : 'QUEEN IN PLAY'; lines.push([q, g.pendingCover >= 0 ? '#ffd23a' : '#d8b890']); }
+    if (g.id === 'classic' || g.id === 'duel' || g.id === 'queen') { const q = g.pendingCover >= 0 ? 'COVER THE QUEEN!' : g.queenBy >= 0 ? 'QUEEN COVERED' : 'QUEEN IN PLAY'; lines.push([q, g.pendingCover >= 0 ? '#ffd23a' : '#d8b890']); }
     let y = y0; for (const [s, c] of lines) { text(ctx, s, cx, y, { align: 'c', color: c, outline: '#2a1608', scale: Math.min(1, w / Math.max(1, textWidth(s))) }); y += 9.5; }
     const sc = shotClockOf(cfg.mode);
     if (cfg.mode === 'rapid') { const mm = Math.floor(matchClock / 60), ss = Math.floor(matchClock % 60); y += 2; text(ctx, `${mm}:${String(ss).padStart(2, '0')}`, cx, y, { align: 'c', scale: 1.2, bold: true, color: matchClock < 20 ? '#ff8a7a' : '#ffffff', outline: '#2a1608' }); y += 13; }
     if (sc && (phase === 'aim' || phase === 'aiWait')) { const f = clamp(shotClock / sc, 0, 1), bw = w - 8; fillRR(ctx, cx - bw / 2, y + 1, bw, 3.4, '#1a0e06', 1.5); fillRR(ctx, cx - bw / 2, y + 1, Math.max(2, bw * f), 3.4, f < 0.3 ? '#ff5a4a' : '#ffc040', 1.5); y += 8; }
+    if (g.extra) text(ctx, 'EXTRA SHOT', cx, y, { align: 'c', color: '#ff9a8a', outline: null });
     if (g.suddenDeath) text(ctx, 'SUDDEN DEATH', cx, y, { align: 'c', color: '#ff9a8a', outline: null });
   }
 
@@ -393,8 +396,8 @@ export function makePlay(): Scene {
     return {
       slideL: { x: cl - rr - 2, y: ay, r: rr }, slideR: { x: cl + rr + 2, y: ay, r: rr },
       aimL: { x: cr - rr - 2, y: ay, r: rr }, aimR: { x: cr + rr + 2, y: ay, r: rr },
-      power: { x: cr - 25, y: Y0() + 76, w: 15, h: Math.max(70, ay - rr - 14 - (Y0() + 76)) } as Pw,
-      shoot: { x: cr + 12, y: Y0() + 118, r: 15 } as Btn, bolt: { x: cr + 12, y: Y0() + 84, r: 10 } as Btn, Y1,
+      power: { x: cr - 25, y: Y0() + 72, w: 15, h: Math.max(70, ay - rr - 14 - (Y0() + 72)) } as Pw,
+      shoot: { x: cr + 12, y: Math.min(Y0() + 140, ay - rr - 44), r: 15 } as Btn, bolt: { x: cr + 12, y: Math.min(Y0() + 100, ay - rr - 78), r: 10 } as Btn, Y1,
     };
   };
   function powerBar(ctx: CanvasRenderingContext2D, P: Pw, enabled: boolean) {

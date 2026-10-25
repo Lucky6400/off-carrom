@@ -7,16 +7,16 @@ export type Side = 'white' | 'black';
 export const QUEEN = 19;
 export const sideOf = (id: number): Side | 'queen' => (id === QUEEN ? 'queen' : id <= 9 ? 'white' : 'black');
 export const coinValue = (id: number) => (id === QUEEN ? 50 : id <= 9 ? 20 : 10);
-export const RAPID_TIME = 180, SHOT_CLOCK = 25, DUEL_CLOCK = 20, KNOCK_LIVES = 3;
-export const TARGETS: Partial<Record<GameId, number>> = { free: 100, combo: 120, bank: 60, target: 19, sprint: 3 };
+export const RAPID_TIME = 180, SHOT_CLOCK = 25, SHOOT_SHOTS = 6, MATCH_TARGET = 12;
+export const TARGETS: Partial<Record<GameId, number>> = { free: 100, combo: 120, bank: 60, target: 19, sprint: 4 };
 /** per shot clock (seconds) of a mode, 0 = none */
-export const shotClockOf = (m: GameId) => (m === 'rapid' ? SHOT_CLOCK : m === 'duel' ? DUEL_CLOCK : 0);
+export const shotClockOf = (m: GameId) => (m === 'rapid' ? SHOT_CLOCK : 0);
 export const isColored = (m: GameId) => m === 'classic' || m === 'duel' || m === 'queen';
 
 export interface PlayerSt { idx: number; ai: boolean; side: Side | null; score: number; lives: number; pots: number; streak: number; bestStreak: number; fouls: number }
 export interface Verdict {
   foul: string | null; keep: boolean; win: number; reason: string; potted: number[]; respot: number[]; reRack: boolean; nextTurn: number;
-  points: number; lifeLost: boolean; pending: boolean; covered: boolean; msg: string; sub: string; tone: 'good' | 'bad' | 'info';
+  points: number; lifeLost: boolean; board?: string; pending: boolean; covered: boolean; msg: string; sub: string; tone: 'good' | 'bad' | 'info';
 }
 
 /* ---------------------------------------------------------------- racks */
@@ -32,7 +32,6 @@ function lattice() {
 }
 export function rackIds(g: GameId): number[] {
   switch (g) {
-    case 'duel': return [1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16];
     case 'queen': return [QUEEN, 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 16].slice(0, 13);
     case 'sprint': return [QUEEN, 1, 2, 3, 10, 11, 12];
     case 'target': return [1, 2, 3, 4, 5, 6, 7, 8];
@@ -45,10 +44,6 @@ export function rackCoins(g: GameId): Coin[] {
   const put = (id: number, p: [number, number]) => out.push(newCoin(id, p[0], p[1]));
   const white = (n: number) => n, black = (n: number) => 9 + n;
   switch (g) {
-    case 'duel': {
-      const pos = [...L.ring1, ...L.corners, L.edges[1], L.edges[4]];
-      pos.forEach((p, i) => put(i % 2 === 0 ? white(1 + (i >> 1)) : black(1 + (i >> 1)), p)); break;
-    }
     case 'queen': {
       put(QUEEN, [0, 0]); const pos = [...L.ring1, ...L.corners];
       pos.forEach((p, i) => put(i % 2 === 0 ? white(1 + (i >> 1)) : black(1 + (i >> 1)), p)); break;
@@ -81,12 +76,12 @@ export function spotCoin(s: Sim, id: number) {
 
 /* ---------------------------------------------------------------- the game */
 export class Game {
-  id: GameId; players: PlayerSt[]; turn = 0; over = false; winner = -1; reason = ''; down = new Set<number>(); ids: number[]; pendingCover = -1; queenBy = -1; suddenDeath = false;
+  id: GameId; players: PlayerSt[]; turn = 0; over = false; winner = -1; reason = ''; down = new Set<number>(); ids: number[]; pendingCover = -1; queenBy = -1; suddenDeath = false; extra = false; opened = false;
   constructor(id: GameId, ai: [boolean, boolean], ids?: number[]) {
     this.id = id; this.ids = ids ?? rackIds(id);
-    this.players = [0, 1].map((i) => ({ idx: i, ai: ai[i], side: isColored(id) ? (i === 0 ? 'white' : 'black') : null, score: 0, lives: KNOCK_LIVES, pots: 0, streak: 0, bestStreak: 0, fouls: 0 }));
+    this.players = [0, 1].map((i) => ({ idx: i, ai: ai[i], side: isColored(id) ? (i === 0 ? 'white' : 'black') : null, score: 0, lives: SHOOT_SHOTS, pots: 0, streak: 0, bestStreak: 0, fouls: 0 }));
   }
-  clone(): Game { const g = new Game(this.id, [false, false], this.ids); g.players = this.players.map((p) => ({ ...p })); g.turn = this.turn; g.over = this.over; g.winner = this.winner; g.down = new Set(this.down); g.pendingCover = this.pendingCover; g.queenBy = this.queenBy; g.suddenDeath = this.suddenDeath; return g; }
+  clone(): Game { const g = new Game(this.id, [false, false], this.ids); g.players = this.players.map((p) => ({ ...p })); g.turn = this.turn; g.over = this.over; g.winner = this.winner; g.down = new Set(this.down); g.pendingCover = this.pendingCover; g.queenBy = this.queenBy; g.suddenDeath = this.suddenDeath; g.extra = this.extra; g.opened = this.opened; return g; }
   get cur() { return this.players[this.turn]; }
   get opp() { return this.players[1 - this.turn]; }
   colored() { return isColored(this.id); }
@@ -111,7 +106,7 @@ export class Game {
     const res: number[] = [], id = this.id;
     let unpend = false;
     if (this.colored()) {
-      const gambit = id === 'queen', q = ids.includes(QUEEN), own = ids.filter((i) => i !== QUEEN && this.mine(i)), oth = ids.filter((i) => i !== QUEEN && !this.mine(i));
+      const gambit = id === 'queen', brk = gambit && !this.opened, q = ids.includes(QUEEN) && !brk, own = ids.filter((i) => i !== QUEEN && this.mine(i)), oth = ids.filter((i) => i !== QUEEN && !this.mine(i));
       const ownBefore = this.liveOwn(me.idx).length;
       if (foul) {
         res.push(...ids);
@@ -122,6 +117,7 @@ export class Game {
         if (this.pendingCover === me.idx) { if (own.length) cover = true; else res.push(QUEEN); unpend = true; }
         if (q) { if (own.length || ownBefore === 0) cover = true; else { v.pending = true; } }
         if (gambit) res.push(...oth);
+        if (brk && ids.includes(QUEEN)) { res.push(QUEEN); v.sub = 'QUEEN GOES BACK ON THE BREAK'; }
         if (cover) { v.covered = true; this.queenBy = me.idx; }
         v.keep = own.length > 0 || v.pending;
         // the last coin cannot win while the queen is still in play: it comes back
@@ -141,10 +137,21 @@ export class Game {
       const sc = this.scoreShot(v, sh, ids, foul, res); void sc;
       this.commit(v, ids, res, false);
     }
-    if (v.win < 0) this.afterRules(v, me, opp, ids, foul);
+    if (id === 'duel' && v.win >= 0) this.boardWon(v);
+    this.opened = true;
+    if (v.board) { /* next board: no turn logic */ }
+    else if (v.win < 0) this.afterRules(v, me, opp, ids, foul);
     else this.finish(v);
     this.message(v, ids.length - res.filter((i) => ids.includes(i)).length);
     return v;
+  }
+  /** match play: the ICF board score is the rival's coins left on the board plus 3 for covering the queen; first to MATCH_TARGET wins, else a new board starts */
+  private boardWon(v: Verdict) {
+    const w = this.players[v.win], l = this.players[1 - v.win], pts = this.liveOwn(l.idx).length + (this.queenBy === w.idx ? 3 : 0);
+    w.score += pts; v.points = pts;
+    if (w.score >= MATCH_TARGET) { v.reason = `${w.score} POINTS`; this.finish(v); return; }
+    v.board = `+${pts} POINTS TO ${w.idx === 0 ? 'YOU' : 'RIVAL'}`; v.win = -1; v.reason = ''; v.reRack = true; v.keep = false;
+    this.down.clear(); this.pendingCover = -1; this.queenBy = -1; this.turn = v.nextTurn = l.idx;
   }
   /** the modes where any coin scores */
   private scoreShot(v: Verdict, sh: ShotLog, ids: number[], foul: string | null, res: number[]) {
@@ -155,11 +162,12 @@ export class Game {
         break;
       }
       case 'combo': {
-        if (foul) { res.push(...ids); v.points = -Math.min(20, me.score); } else { let st = me.streak; for (const i of ids) { st++; v.points += (i === QUEEN ? 30 : 10) * st; } v.keep = ids.length > 0; }
+        if (foul) { res.push(...ids); v.points = -Math.min(20, me.score); } else { let st = me.streak; for (const i of ids) { st++; v.points += (i === QUEEN ? 20 : 10) * Math.min(st, 5); } v.keep = ids.length > 0; }
         break;
       }
-      case 'knock': {
-        if (foul) res.push(...ids); v.keep = !foul && ids.length > 0; v.lifeLost = !v.keep; break;
+      case 'knock': { // shootout: one shot each per round, coins score like freestyle
+        if (foul) { res.push(...ids); v.points = -Math.min(10, me.score); } else { v.points = ids.reduce((a, i) => a + coinValue(i), 0); v.keep = ids.length > 0; }
+        break;
       }
       case 'bank': {
         const bank = sh.pocketed.filter((p) => p.id !== 0 && p.rim).map((p) => p.id), direct = ids.filter((i) => !bank.includes(i));
@@ -167,11 +175,16 @@ export class Game {
         break;
       }
       case 'sprint': {
-        if (foul) { res.push(...ids); opp.score += 1; } else { v.points = ids.length; v.keep = ids.length > 0; }
+        if (foul) { res.push(...ids); v.points = -Math.min(1, me.score); } else { v.points = ids.reduce((a, i) => a + (i === QUEEN ? 2 : 1), 0); v.keep = ids.length > 0; }
         break;
       }
       case 'target': {
-        if (foul) res.push(...ids); else { v.points = ids.reduce((a, i) => a + i, 0); v.keep = ids.length > 0; }
+        if (foul) res.push(...ids);
+        else { // a coin scores only if it is the lowest one still on the board when it drops; any other coin you pot goes back
+          const left = this.live().sort((a, b) => a - b); let n = 0;
+          for (const i of [...ids].sort((a, b) => a - b)) { if (i === left[n]) { v.points += i; n++; } else res.push(i); }
+          v.keep = n > 0;
+        }
         break;
       }
     }
@@ -190,11 +203,13 @@ export class Game {
   private afterRules(v: Verdict, me: PlayerSt, opp: PlayerSt, ids: number[], foul: string | null) {
     const id = this.id;
     me.score += v.points; if (me.score < 0) me.score = 0;
-    if (v.lifeLost) me.lives--;
+    if (id === 'knock') me.lives--;
     if (v.keep) { me.streak += Math.max(1, v.potted.length); me.bestStreak = Math.max(me.bestStreak, me.streak); } else me.streak = 0;
     const tgt = TARGETS[id];
-    if (tgt !== undefined) { if (me.score >= tgt) { v.win = me.idx; v.reason = id === 'sprint' ? 'THREE COINS' : `${me.score} POINTS`; } else if (opp.score >= tgt) { v.win = opp.idx; v.reason = id === 'sprint' ? 'THREE COINS' : `${opp.score} POINTS`; } }
-    if (id === 'knock' && me.lives <= 0) { v.win = opp.idx; v.reason = 'OUT OF LIVES'; }
+    if (tgt !== undefined) { if (me.score >= tgt) { v.win = me.idx; v.reason = `${me.score} POINTS`; } else if (opp.score >= tgt) { v.win = opp.idx; v.reason = `${opp.score} POINTS`; } }
+    if (id === 'knock' && me.lives <= 0 && opp.lives <= 0) { // both have shot all their shots: higher score wins, a tie plays one extra shot each
+      if (me.score !== opp.score) { v.win = me.score > opp.score ? me.idx : opp.idx; v.reason = 'SHOOTOUT'; } else { me.lives = opp.lives = 1; this.extra = true; }
+    }
     if (this.suddenDeath && v.win < 0) { if (foul) { v.win = opp.idx; v.reason = 'SUDDEN DEATH FOUL'; } else if (v.potted.length > 0) { v.win = me.idx; v.reason = 'SUDDEN DEATH POT'; } }
     if (v.win < 0 && this.live().length === 0 && v.respot.length === 0) { // the board is empty
       if (id === 'free' || id === 'target' || id === 'bank' || id === 'combo' || id === 'sprint' || id === 'rapid') {
@@ -204,18 +219,20 @@ export class Game {
       else { v.win = me.pots >= opp.pots ? me.idx : opp.idx; v.reason = 'BOARD CLEARED'; }
     }
     if (v.win >= 0) { this.finish(v); return; }
-    v.nextTurn = v.keep ? this.turn : opp.idx; this.turn = v.nextTurn;
+    v.nextTurn = v.keep && id !== 'knock' ? this.turn : opp.idx; this.turn = v.nextTurn;
   }
   private finish(v: Verdict) { this.over = true; this.winner = v.win; this.reason = v.reason; v.nextTurn = this.turn; }
   private message(v: Verdict, nPots: number) {
+    if (v.board) { v.msg = 'BOARD OVER'; v.sub = v.board; v.tone = 'good'; return; }
     if (v.win >= 0) { v.msg = 'GAME OVER'; v.sub = v.reason; v.tone = 'info'; return; }
-    if (v.foul) { v.msg = 'FOUL!'; const pen = this.colored() ? 'A COIN COMES BACK' : this.id === 'knock' ? 'LIFE LOST' : ''; v.sub = [v.foul, pen].filter(Boolean).join('  '); v.tone = 'bad'; return; }
+    if (v.foul) { v.msg = 'FOUL!'; const pen = this.colored() ? 'A COIN COMES BACK' : this.id === 'knock' ? 'LOSE 10 POINTS' : ''; v.sub = [v.foul, pen].filter(Boolean).join('  '); v.tone = 'bad'; return; }
     if (v.covered) { v.msg = 'QUEEN COVERED!'; v.sub = ''; v.tone = 'good'; return; }
     if (v.pending) { v.msg = 'QUEEN DOWN'; v.sub = 'COVER HER NOW'; v.tone = 'good'; return; }
     if (v.sub) { v.msg = 'CAREFUL'; v.tone = 'info'; return; }
     if (v.lifeLost) { v.msg = 'MISS'; v.sub = 'LIFE LOST'; v.tone = 'bad'; return; }
     if (this.id === 'bank' && v.respot.length && !v.keep) { v.msg = 'NO BANK'; v.sub = 'THE COIN GOES BACK'; v.tone = 'info'; return; }
     if (v.keep) { v.msg = nPots > 1 ? `${nPots} COINS!` : 'NICE SHOT!'; v.sub = v.points > 0 && !this.colored() ? `+${v.points}` : ''; v.tone = 'good'; return; }
+    if (this.id === 'knock') { v.msg = 'MISS'; v.tone = 'bad'; return; }
     v.msg = ''; v.tone = 'info';
   }
   /** the match clock ran out (rapid fire): decide the winner, or go to sudden death on a tie */
@@ -228,8 +245,8 @@ export class Game {
     const me = this.players[p];
     switch (this.id) {
       case 'free': case 'rapid': case 'combo': case 'bank': case 'target': return String(me.score);
-      case 'sprint': return `${me.score}/3`;
-      case 'knock': return '♥'.repeat(Math.max(0, me.lives));
+      case 'sprint': return `${me.score}/4`;
+      case 'knock': return String(me.score);
       case 'classic': case 'duel': case 'queen': return String(this.liveOwn(p).length);
       default: return '';
     }
