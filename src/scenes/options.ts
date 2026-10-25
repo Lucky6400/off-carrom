@@ -55,7 +55,7 @@ export function makeProfile(): Scene {
       text(ctx, c.name, px + pw / 2, py + ph - 24, { align: 'c', bold: true, color: '#ffffff', outline: '#2c1a08', shadow: '#000000' }); text(ctx, c.title, px + pw / 2, py + ph - 12, { align: 'c', color: '#f2dac3', outline: '#2c1a08' });
       const rx = px + pw + 12, rw = X1() - 8 - rx; panel(ctx, rx, py, rw, ph, { fill: '#2c1b09' });
       // the right panel scrolls vertically (drag it, or use the arrow keys); everything inside is clipped to the panel
-      const contentH = 40 + 6 * 11.5 + 4 + 62, maxScroll = Math.max(0, contentH - ph + 6);
+      const contentH = 40 + 6 * 11.5 + 4 + 76, maxScroll = Math.max(0, contentH - ph + 6);
       if (ptr.down && inRect(ptr.sx, ptr.sy, rx, py, rw, ph) && ptr.dragged) scroll -= ptr.dy; if (keys.has('ArrowDown')) scroll += 2.5; if (keys.has('ArrowUp')) scroll -= 2.5;
       scroll = clamp(scroll, 0, maxScroll);
       ctx.save(); ctx.beginPath(); ctx.roundRect(rx + 1, py + 1, rw - 2, ph - 2, 5); ctx.clip(); ctx.translate(0, -Math.round(scroll));
@@ -66,9 +66,9 @@ export function makeProfile(): Scene {
       rows.forEach(([k, v0], i) => { const y = py + 40 + i * 11.5, v = /^\d+$/.test(v0) ? fmtC(+v0) : v0, sc = fit(v, rw - 28 - textWidth(k)); text(ctx, k, rx + 10, y, { color: '#c0af9e', outline: null }); text(ctx, v, rx + rw - 10, y + (1 - sc) * 3, { align: 'r', color: '#ffffff', outline: '#2c1a08', scale: sc }); });
       // equipped gear
       const gy = py + 40 + rows.length * 11.5 + 4; text(ctx, 'EQUIPPED', rx + 10, gy, { color: '#ffe27a', outline: '#3a2000' });
-      ctx.drawImage(strikerIcon(strikerById(save.striker), 26), rx + 10, gy + 2); ctx.drawImage(gripIcon(gripById(save.grip), 24), rx + 42, gy + 3); ctx.drawImage(powderIcon(powderById(save.powder), 24), rx + 70, gy + 3);
+      ctx.drawImage(strikerIcon(strikerById(save.striker), 26), rx + 10, gy + 11); ctx.drawImage(gripIcon(gripById(save.grip), 24), rx + 42, gy + 12); ctx.drawImage(powderIcon(powderById(save.powder), 24), rx + 70, gy + 12);
       { const nm = (label: string, v: string, y: number) => { text(ctx, label, rx + 10, y, { color: '#c0af9e', outline: null }); text(ctx, v, rx + rw - 10, y, { align: 'r', color: '#ffffff', outline: '#2c1a08', scale: fit(v, rw - 30 - textWidth(label)) }); };
-        nm('STRIKER', strikerById(save.striker).name, gy + 34); nm('GRIP', gripById(save.grip).name, gy + 45.5); nm('POWDER', powderById(save.powder).name, gy + 57); }
+        nm('STRIKER', strikerById(save.striker).name, gy + 44); nm('GRIP', gripById(save.grip).name, gy + 55.5); nm('POWDER', powderById(save.powder).name, gy + 67); }
       ctx.restore();
       if (maxScroll > 0) { const th = Math.max(14, (ph - 8) * (ph / contentH)), ty0 = py + 4 + ((ph - 8 - th) * scroll) / maxScroll; fillRR(ctx, rx + rw - 4, py + 4, 2.4, ph - 8, 'rgba(0,0,0,0.35)', 1); fillRR(ctx, rx + rw - 4, ty0, 2.4, th, '#d7914b', 1); }
       if (capsule(ctx, 'CHANGE PLAYER', X1() - 80, view.h - view.sb - 34, 130, 19, 'teal')) go('select', { title: 'SELECT PLAYER', ids: PLAYABLE.map((p) => p.id), start: save.char, owned: (id: string) => save.chars.includes(id), onPick: (id: string) => { save.char = id; persist(); go('profile'); }, onBack: () => go('profile') } as SelectParams);
