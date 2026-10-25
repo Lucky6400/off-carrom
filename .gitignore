@@ -1,0 +1,15 @@
+node_modules
+dist
+*.log
+.netlify
+.env
+.env.*
+.DS_Store
+.claude/settings.local.json
+.claude/worktrees/
+
+# Play signing + release builds
+keystore.properties
+*.jks
+*.keystore
+release/

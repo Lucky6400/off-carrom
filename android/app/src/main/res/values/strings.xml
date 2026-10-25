@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Off Carrom</string>
+    <string name="title_activity_main">Off Carrom</string>
+    <string name="package_name">com.arcadoff.offcarrom</string>
+    <string name="custom_url_scheme">com.arcadoff.offcarrom</string>
+</resources>

@@ -1,0 +1,16 @@
+{
+  "appId": "com.arcadoff.offcarrom",
+  "appName": "Off Carrom",
+  "webDir": "dist",
+  "backgroundColor": "#120c06",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#120c06"
+  },
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "allowsLinkPreview": false,
+    "backgroundColor": "#120c06"
+  }
+}

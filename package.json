@@ -1,0 +1,37 @@
+{
+  "name": "off-carrom",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Off Carrom - a landscape arcade pool game. Canvas 2D graphics generated in code, 3D rendered balls, synthesised WebAudio, no image assets.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5178",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "sim": "tsx scripts/sim.ts",
+    "icons": "node scripts/make-icons.mjs",
+    "android:sync": "npm run build && cap sync android",
+    "android:build": "npm run android:sync && cd android && gradlew.bat assembleDebug",
+    "android:open": "cap open android",
+    "ios:sync": "npm run build && cap sync ios"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "@types/node": "^26.6.5",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^8.2.1",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@fontsource/bungee": "^5.3.0",
+    "@fontsource/rajdhani": "^5.3.0",
+    "@mdi/js": "^7.4.47"
+  }
+}
