@@ -7,6 +7,7 @@ import { LOCS } from '../data/locations.js';
 import { STRIKERS, POWDERS, GRIPS } from '../data/items.js';
 import { hallArt } from './halls.js';
 import { mdiTrophy, mdiCog } from '@mdi/js';
+import { drawCoin, drawShadow, lookOf, miniRack } from './coins.js';
 import { strikerIcon, powderIcon, gripIcon } from './gearfx.js';
 
 type C = CanvasRenderingContext2D;
@@ -56,14 +57,22 @@ void shade;
 export type MenuKind = 'career' | 'quick' | 'tournament' | 'options';
 export function menuCardArt(kind: MenuKind, w: number, h: number): HTMLCanvasElement {
   const key = `m|${kind}|${Math.round(w)}|${Math.round(h)}|${view.rs}`, hit = cache.get(key); if (hit) return hit;
-  if (kind === 'career' || kind === 'quick') { const base = kind === 'career' ? cardArt('map', w, h) : hallArt(3, w, h); cache.set(key, base); return base; }
   const { cv, ctx: c } = hi(w, h); c.save(); c.beginPath(); c.rect(0, 0, w, h); c.clip();
-  if (kind === 'tournament') {
-    rect(c, 0, 0, w, h, lg(c, 0, 0, 0, h, [[0, '#523512'], [1, '#1d1307']])); const g = c.createRadialGradient(w / 2, h * 0.42, 4, w / 2, h * 0.42, h * 0.9); g.addColorStop(0, 'rgba(255,226,90,0.45)'); g.addColorStop(1, 'rgba(255,226,90,0)'); rect(c, 0, 0, w, h, g);
+  if (kind === 'career') { // teal felt-and-gold: a big board close-up with a dotted trail of venues
+    rect(c, 0, 0, w, h, lg(c, 0, 0, w, h, [[0, '#0e4a52'], [1, '#06161e']])); for (let i = 0; i < 16; i++) { c.strokeStyle = 'rgba(120,230,220,0.07)'; c.lineWidth = 1; c.beginPath(); c.arc(w * 0.5, h * 0.5, 12 + i * 14, 0, 7); c.stroke(); }
+    miniRack(c, 'classic', w * 0.5, h * 0.44, Math.min(w, h) * 0.78, ['#d8a868', '#8a5a2a'], ['#f0d49a', '#d0a868']);
+    c.setLineDash([3, 4]); c.strokeStyle = '#ffe27a'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(w * 0.06, h * 0.9); c.bezierCurveTo(w * 0.3, h * 0.6, w * 0.7, h * 1.0, w * 0.94, h * 0.3); c.stroke(); c.setLineDash([]);
+    for (const [x, y, col] of [[0.06, 0.9, '#ffb347'], [0.5, 0.78, '#3ab8d8'], [0.94, 0.3, '#ff3ad8']] as [number, number, string][]) { c.save(); c.shadowColor = col; c.shadowBlur = 6 * view.rs; circ(c, w * x, h * y, 5, col); c.restore(); }
+  } else if (kind === 'quick') { // violet night with a striker flying through, speed streaks and coins
+    rect(c, 0, 0, w, h, lg(c, 0, 0, 0, h, [[0, '#2a1060'], [1, '#0a0424']])); for (let i = 0; i < 24; i++) { c.strokeStyle = `rgba(255,200,255,${0.06 + hash2(i, 2) * 0.14})`; c.lineWidth = 1 + hash2(i, 3) * 2; const y = hash2(i, 1) * h; c.beginPath(); c.moveTo(w * (0.1 + hash2(i, 4) * 0.4), y); c.lineTo(w * 0.8, y + (y - h / 2) * 0.15); c.stroke(); }
+    for (let i = 0; i < 6; i++) { const x = w * (0.62 + hash2(i, 5) * 0.3), y = h * (0.1 + hash2(i, 6) * 0.7); drawShadow(c, x, y, 7); drawCoin(c, lookOf('classic', i % 2 ? 1 : 10), x, y, 7); }
+    const sr = h * 0.3; c.save(); c.shadowColor = '#ff9aff'; c.shadowBlur = 12 * view.rs; drawCoin(c, lookOf('classic', 0), w * 0.36, h * 0.42, sr, { striker: STRIKERS[5], rot: 0.5 }); c.restore();
+  } else if (kind === 'tournament') {
+    rect(c, 0, 0, w, h, lg(c, 0, 0, 0, h, [[0, '#7a0e2a'], [1, '#26040e']])); const g = c.createRadialGradient(w / 2, h * 0.42, 4, w / 2, h * 0.42, h * 0.9); g.addColorStop(0, 'rgba(255,226,90,0.5)'); g.addColorStop(1, 'rgba(255,226,90,0)'); rect(c, 0, 0, w, h, g); for (let i = 0; i < 40; i++) { c.fillStyle = ['#ffd23a', '#ff6a8a', '#7affd8', '#ffffff'][i % 4]; c.save(); c.translate(hash2(i, 1) * w, hash2(i, 2) * h); c.rotate(hash2(i, 3) * 6); c.fillRect(0, 0, 3, 1.6); c.restore(); }
     c.strokeStyle = 'rgba(242,189,135,0.35)'; c.lineWidth = 1.2; for (const sx of [0.12, 0.88]) for (let i = 0; i < 4; i++) { const y = h * (0.16 + i * 0.17), x = w * sx, dx = sx < 0.5 ? 1 : -1; c.beginPath(); c.moveTo(x, y); c.lineTo(x + dx * w * 0.08, y); c.lineTo(x + dx * w * 0.08, y + (i % 2 ? -1 : 1) * h * 0.085); c.lineTo(x + dx * w * 0.16, y + (i % 2 ? -1 : 1) * h * 0.085); c.stroke(); }
     const sz = h * 0.62; c.save(); c.translate(w / 2 - sz / 2, h * 0.46 - sz / 2 - 3); c.scale(sz / 24, sz / 24); const p = new Path2D(mdiTrophy); c.shadowColor = '#ffd23a'; c.shadowBlur = 10 * view.rs; c.fillStyle = lg(c, 0, 2, 0, 22, [[0, '#fff4a0'], [1, '#e0a010']]); c.fill(p); c.shadowBlur = 0; c.lineWidth = 0.5; c.strokeStyle = '#7a4a00'; c.stroke(p); c.restore();
   } else {
-    rect(c, 0, 0, w, h, lg(c, 0, 0, w, h, [[0, '#613e18'], [1, '#1d1307']])); for (let i = 0; i < 12; i++) { c.fillStyle = `rgba(255,255,255,${0.02 + (i % 3) * 0.015})`; c.beginPath(); c.arc(w * ((i * 0.37) % 1), h * ((i * 0.61) % 1), 10 + i * 3, 0, 7); c.fill(); }
+    rect(c, 0, 0, w, h, lg(c, 0, 0, w, h, [[0, '#1a3a78'], [1, '#080e24']])); c.strokeStyle = 'rgba(140,190,255,0.12)'; c.lineWidth = 0.6; for (let x = 0; x < w; x += 10) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); } for (let y = 0; y < h; y += 10) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
     const sz = h * 0.7; c.save(); c.translate(w / 2 - sz / 2, h * 0.46 - sz / 2 - 3); c.scale(sz / 24, sz / 24); const p = new Path2D(mdiCog); c.shadowColor = '#e1a569'; c.shadowBlur = 8 * view.rs; c.fillStyle = lg(c, 0, 2, 0, 22, [[0, '#fbecdc'], [1, '#c88a4a']]); c.fill(p); c.shadowBlur = 0; c.lineWidth = 0.4; c.strokeStyle = '#261809'; c.stroke(p); c.restore();
   }
   c.restore(); cache.set(key, cv); return cv;
@@ -74,7 +83,7 @@ const rgba = (hex: string, a: number) => { const n = parseInt(hex.slice(1), 16);
     The player is drawn over it (no backdrop of their own). */
 export function profileCardArt(id: string, w: number, h: number): HTMLCanvasElement {
   const key = `p|${id}|${Math.round(w)}|${Math.round(h)}|${view.rs}`, hit = cache.get(key); if (hit) return hit;
-  const [b0, b1] = charById(id).look.bg, { cv, ctx: c } = hi(w, h), gx = w / 2; c.save(); c.beginPath(); c.rect(0, 0, w, h); c.clip();
+  const [b0, b1] = ['#1c7a88', '#07222c'] as [string, string], _bg = charById(id), { cv, ctx: c } = hi(w, h), gx = w / 2; c.save(); c.beginPath(); c.rect(0, 0, w, h); c.clip();
   rect(c, 0, 0, w, h, lg(c, 0, 0, w * 0.6, h, [[0, mixHex(b0, '#1d1307', 0.3)], [1, mixHex(b1, '#0f0903', 0.4)]]));
   c.save(); c.globalAlpha = 0.07; c.strokeStyle = '#ffffff'; c.lineWidth = 1; for (let x = -h; x < w + h; x += 9) { c.beginPath(); c.moveTo(x, h); c.lineTo(x + h, 0); c.stroke(); } c.restore();
   for (let i = 0; i < 9; i++) circ(c, hash2(i, 11) * w, hash2(i, 12) * h * 0.55, 2.5 + hash2(i, 13) * 5, rgba(shade(b0, 0.6), 0.07 + hash2(i, 14) * 0.08));
