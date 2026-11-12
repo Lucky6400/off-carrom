@@ -18,6 +18,7 @@ import { LOCS } from '../data/locations.js';
 import { gamesWon } from '../save.js';
 import { settingsBody, ROW_H, SETTINGS_ROWS } from '../gfx/settings.js';
 import { backBtn, CB } from './common.js';
+import { rateApp, shareApp, openPrivacy, openTerms } from '../share.js';
 import { clamp, fmt, fmtC } from '../util.js';
 import type { SelectParams } from './select.js';
 import { PLAYABLE } from '../data/characters.js';
@@ -30,8 +31,13 @@ export function makeOptions(): Scene {
       menuBg(ctx, 'dark'); topBar(ctx, X0(), X1()); header(ctx, 'OPTIONS', CX(), 24, 140);
       const w = Math.min(330, view.w - 28), x = CX() - w / 2, y = 54, h = SETTINGS_ROWS * ROW_H + 14; panel(ctx, x, y, w, h, { fill: '#2c1b09' });
       settingsBody(ctx, x + 14, y + 7, w - 28);
-      if (capsule(ctx, 'RESET PROGRESS', CX(), y + h + 6, 150, 19, 'red')) confirm = true;
-      text(ctx, 'OFF CARROM  V0.1', CX(), view.h - view.sb - 20, { align: 'c', color: '#978a7d', outline: null });
+      { const by = y + h + 6, bw = Math.min(100, (w - 12) / 3);
+        if (capsule(ctx, 'RATE APP', CX() - bw - 6, by, bw, 18, 'green')) rateApp();
+        if (capsule(ctx, 'SHARE APP', CX(), by, bw, 18, 'teal')) void shareApp();
+        if (capsule(ctx, 'RESET', CX() + bw + 6, by, bw, 18, 'red')) confirm = true;
+        if (capsule(ctx, 'PRIVACY POLICY', CX() - 56, by + 22, 108, 18, 'dark', { scale: 0.85 })) openPrivacy();
+        if (capsule(ctx, 'TERMS OF SERVICE', CX() + 56, by + 22, 108, 18, 'dark', { scale: 0.85 })) openTerms(); }
+      text(ctx, 'OFF CARROM  V0.1', CX(), view.h - view.sb - 9, { align: 'c', color: '#978a7d', outline: null });
       if (backBtn(ctx)) go('title');
       if (confirm) {
         ctx.fillStyle = 'rgba(11,6,1,0.9)'; ctx.fillRect(0, 0, view.w, view.h); header(ctx, 'ARE YOU SURE?', CX(), view.h * 0.28, 170); text(ctx, 'ALL PROGRESS WILL BE LOST', CX(), view.h * 0.28 + 34, { align: 'c', color: '#ff8a9a', outline: '#2a0010', bold: true });

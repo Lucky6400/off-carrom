@@ -15,7 +15,7 @@ export type AdFail = 'unavailable' | 'closed'
 export interface RewardResult { completed: boolean; reason?: AdFail }
 
 const UNITS = Capacitor.getPlatform() === 'android'
-  ? { interstitial: 'ca-app-pub-3940256099942544/1033173712', rewarded: 'ca-app-pub-3940256099942544/5224354917' } // Google TEST units until Off Carrom has its own AdMob units
+  ? { interstitial: 'ca-app-pub-7838406773645139/5342929117', rewarded: 'ca-app-pub-7838406773645139/3987495741' }
   : { interstitial: 'ca-app-pub-3940256099942544/1033173712', rewarded: 'ca-app-pub-3940256099942544/5224354917' }
 const isNative = () => Capacitor.isNativePlatform()
 const LOAD_WAIT_MS = 6000
